@@ -9,6 +9,10 @@ permissions:
   id-token: write
   contents: read
 
+env:
+  AWS_ROLE_ARN: arn:aws:iam::211125361567:role/github-actions
+  profile: tada-develop
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -20,8 +24,23 @@ jobs:
       - name: Configure AWS credentials from OIDC
         uses: aws-actions/configure-aws-credentials@v2
         with:
-          role-to-assume: arn:aws:iam::211125361567:role/github-actions
+          role-to-assume: ${{ env.AWS_ROLE_ARN }}
           aws-region: ap-northeast-1
+      - name: Install Terraform
+        uses: hashicorp/setup-terraform@v1
+        with:
+          terraform_version: 1.0.0
+      - name: Terraform Init
+        run: terraform init
+
+      # see https://github.com/aws-actions/configure-aws-credentials/issues/112#issuecomment-1909209177
+      # configure-aws-credentialsが対応したら以下のコードは不要
+      - name: Configure AWS Profiles
+        run: |
+          mkdir ~/.aws
+          echo "[${{ env.profile }}]\ncredential_source = Environment\nrole_arn = ${{env.AWS_ROLE_ARN}}" >> ~/.aws/credentials
+      - name: terraform-plan
+        uses: dflook/terraform-plan@v1.44.0
 
       - name: Deploy to AWS
         run: |
