@@ -14,6 +14,7 @@ permissions:
 env:
   AWS_ROLE_ARN: arn:aws:iam::211125361567:role/github-actions
   profile: tada-develop
+  path: server/terraform/env/main
 
 jobs:
   deploy:
@@ -57,7 +58,7 @@ jobs:
       - name: Terraform Plan
         id: plan
         if: github.event_name == 'pull_request'
-        run: terraform plan -no-color -input=false
+        run: cd ${{env.path}}; terraform plan -no-color -input=false
         continue-on-error: true
 
       - name: Update Pull Request
