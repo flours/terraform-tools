@@ -1,13 +1,15 @@
 name: Deploy to AWS on PR
 
 on:
-  pull_request:
+  push:
     branches:
-      - main  # プルリクエストがマージされる対象ブランチ
+      - main
+  pull_request:
 
 permissions:
   id-token: write
   contents: read
+  pull-requests: write
 
 env:
   AWS_ROLE_ARN: arn:aws:iam::211125361567:role/github-actions
