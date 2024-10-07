@@ -34,7 +34,7 @@ jobs:
         with:
           terraform_version: 1.0.0
       - name: Terraform Init
-        run: terraform init
+        run: cd ${{ env.path }}; terraform init
 
       # see https://github.com/aws-actions/configure-aws-credentials/issues/112#issuecomment-1909209177
       # configure-aws-credentialsが対応したら以下のコードは不要
