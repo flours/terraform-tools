@@ -1,13 +1,20 @@
 name: Deploy to AWS on PR
 
 on:
-  pull_request:
+  push:
     branches:
-      - main  # プルリクエストがマージされる対象ブランチ
+      - main
+  pull_request:
 
 permissions:
   id-token: write
   contents: read
+  pull-requests: write
+
+env:
+  AWS_ROLE_ARN: arn:aws:iam::211125361567:role/github-actions
+  profile: tada-develop
+  path: server/terraform/env/main
 
 jobs:
   deploy:
@@ -20,10 +27,74 @@ jobs:
       - name: Configure AWS credentials from OIDC
         uses: aws-actions/configure-aws-credentials@v2
         with:
-          role-to-assume: arn:aws:iam::123456789012:role/your-oidc-role
-          aws-region: us-west-2
+          role-to-assume: ${{ env.AWS_ROLE_ARN }}
+          aws-region: ap-northeast-1
+      - name: Install Terraform
+        uses: hashicorp/setup-terraform@v1
+        with:
+          terraform_version: 1.0.0
+      - name: Terraform Init
+        run: cd ${{ env.path }}; terraform init
 
-      - name: Deploy to AWS
+      # see https://github.com/aws-actions/configure-aws-credentials/issues/112#issuecomment-1909209177
+      # configure-aws-credentialsが対応したら以下のコードは不要
+      - name: Configure AWS Profiles
         run: |
-          # AWS CLI コマンドまたは Terraform などのツールを使用
-          aws s3 ls
+          mkdir ~/.aws
+          echo "[${{ env.profile }}]\ncredential_source = Environment\nrole_arn = ${{env.AWS_ROLE_ARN}}" >> ~/.aws/credentials
+
+      - name: Terraform Format
+        id: fmt
+        run: terraform fmt -check
+
+      - name: Terraform Init
+        id: init
+        run: terraform init
+
+      - name: Terraform Validate
+        id: validate
+        run: terraform validate -no-color
+
+      - name: Terraform Plan
+        id: plan
+        if: github.event_name == 'pull_request'
+        run: cd ${{env.path}}; terraform plan -no-color -input=false
+        continue-on-error: true
+
+      - name: Update Pull Request
+        uses: actions/github-script@v6
+        if: github.event_name == 'pull_request'
+        env:
+          PLAN: "terraform\n${{ steps.plan.outputs.stdout }}"
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const output = `#### Terraform Format and Style ?\`${{ steps.fmt.outcome }}\`
+            #### Terraform Initialization ⚙️\`${{ steps.init.outcome }}\`
+            #### Terraform Plan ?\`${{ steps.plan.outcome }}\`
+            #### Terraform Validation ?\`${{ steps.validate.outcome }}\`
+
+            <details><summary>Show Plan</summary>
+
+            \`\`\`\n
+            ${process.env.PLAN}
+            \`\`\`
+
+            </details>
+
+            *Pushed by: @${{ github.actor }}, Action: \`${{ github.event_name }}\`*`;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: output
+            })
+
+      - name: Terraform Plan Status
+        if: steps.plan.outcome == 'failure'
+        run: exit 1
+
+      - name: Terraform Apply
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: terraform apply -auto-approve -input=false
