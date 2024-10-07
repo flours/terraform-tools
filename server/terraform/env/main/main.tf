@@ -15,7 +15,7 @@ terraform {
 
 # EC2 インスタンスを作成
 resource "aws_instance" "example" {
-  ami           = "ami-0c55b159cbfafe1f0"  # Amazon Linux 2 の AMI ID
+  ami           = "ami-0ef29ab52ff72213b"
   instance_type = "t2.micro"               # インスタンスタイプ
 
   tags = {
