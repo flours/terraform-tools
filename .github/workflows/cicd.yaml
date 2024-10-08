@@ -43,7 +43,10 @@ jobs:
       - name: Configure AWS Profiles
         run: |
           mkdir ~/.aws;
-          echo -e "[${{ env.PROFILE }}]\ncredential_source = Environment\nrole_arn = ${{env.AWS_ROLE_ARN}}" > ~/.aws/credentials
+          echo "[${{ env.PROFILE }}]" > ~/.aws/credentials
+          echo "aws_access_key_id = ${{ secrets.AWS_ACCESS_KEY_ID }}" >> ~/.aws/credentials
+          echo "aws_secret_access_key = ${{ secrets.AWS_SECRET_ACCESS_KEY }}" >> ~/.aws/credentials
+          echo "aws_session_token = ${{ secrets.AWS_SESSION_TOKEN }}" >> ~/.aws/credentials
 
       - name: Terraform Format
         id: fmt
