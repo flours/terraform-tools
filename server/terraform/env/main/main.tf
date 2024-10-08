@@ -1,6 +1,7 @@
 # Terraform のプロバイダーを設定
 provider "aws" {
-  region = "ap-northeast-1"  # 使用したい AWS リージョンを指定
+  region = "ap-northeast-1"  
+  profile = "tada-develop"   
 }
 
 terraform {
