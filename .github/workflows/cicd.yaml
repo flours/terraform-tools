@@ -3,7 +3,7 @@ name: Deploy to AWS on PR
 on:
   push:
     branches:
-      - main
+      - production
   pull_request:
 
 permissions:
@@ -13,8 +13,10 @@ permissions:
 
 env:
   AWS_ROLE_ARN: arn:aws:iam::211125361567:role/github-actions
-  profile: tada-develop
-  path: server/terraform/env/main
+  PROFILE: tada-develop
+  PATH: server/terraform/env/main
+  REGION: ap-northeast-1
+  TF_VERSION: 1.7.6
 
 jobs:
   deploy:
@@ -28,20 +30,20 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v2
         with:
           role-to-assume: ${{ env.AWS_ROLE_ARN }}
-          aws-region: ap-northeast-1
+          aws-region: ${{ env.REGION }}
       - name: Install Terraform
         uses: hashicorp/setup-terraform@v1
         with:
-          terraform_version: 1.0.0
+          terraform_version: ${{ env.TF_VERSION }}
       - name: Terraform Init
-        run: cd ${{ env.path }}; terraform init
+        run: cd ${{ env.PATH }}; terraform init
 
       # see https://github.com/aws-actions/configure-aws-credentials/issues/112#issuecomment-1909209177
       # configure-aws-credentialsが対応したら以下のコードは不要
       - name: Configure AWS Profiles
         run: |
           mkdir ~/.aws
-          echo "[${{ env.profile }}]\ncredential_source = Environment\nrole_arn = ${{env.AWS_ROLE_ARN}}" >> ~/.aws/credentials
+          echo "[${{ env.PROFILE }}]\ncredential_source = Environment\nrole_arn = ${{env.AWS_ROLE_ARN}}" > ~/.aws/credentials
 
       - name: Terraform Format
         id: fmt
@@ -97,4 +99,4 @@ jobs:
 
       - name: Terraform Apply
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        run: cd ${{ env.path }}; terraform apply -auto-approve -input=false
+        run: cd ${{ env.PATH }}; terraform apply -auto-approve -input=false
