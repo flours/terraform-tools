@@ -42,8 +42,8 @@ jobs:
       # configure-aws-credentialsが対応したら以下のコードは不要
       - name: Configure AWS Profiles
         run: |
-          mkdir ~/.aws
-          echo "[${{ env.PROFILE }}]\ncredential_source = Environment\nrole_arn = ${{env.AWS_ROLE_ARN}}" > ~/.aws/credentials
+          mkdir ~/.aws;
+          echo -e "[${{ env.PROFILE }}]\ncredential_source = Environment\nrole_arn = ${{env.AWS_ROLE_ARN}}" > ~/.aws/credentials
 
       - name: Terraform Format
         id: fmt
