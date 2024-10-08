@@ -16,7 +16,7 @@ env:
   PROFILE: tada-develop
   TF_PATH: server/terraform/env/main
   REGION: ap-northeast-1
-  TF_VERSION: 1.7.6
+  TF_VERSION: 1.9.7
 
 jobs:
   deploy:
