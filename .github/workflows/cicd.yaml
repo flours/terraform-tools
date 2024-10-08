@@ -14,7 +14,7 @@ permissions:
 env:
   AWS_ROLE_ARN: arn:aws:iam::211125361567:role/github-actions
   PROFILE: tada-develop
-  PATH: server/terraform/env/main
+  TF_PATH: server/terraform/env/main
   REGION: ap-northeast-1
   TF_VERSION: 1.7.6
 
@@ -36,7 +36,7 @@ jobs:
         with:
           terraform_version: ${{ env.TF_VERSION }}
       - name: Terraform Init
-        run: cd ${{ env.PATH }}; terraform init
+        run: cd ${{ env.TF_PATH }}; terraform init
 
       # see https://github.com/aws-actions/configure-aws-credentials/issues/112#issuecomment-1909209177
       # configure-aws-credentialsが対応したら以下のコードは不要
@@ -99,4 +99,4 @@ jobs:
 
       - name: Terraform Apply
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        run: cd ${{ env.PATH }}; terraform apply -auto-approve -input=false
+        run: cd ${{ env.TF_PATH }}; terraform apply -auto-approve -input=false
