@@ -3,7 +3,7 @@ name: Deploy to AWS on PR
 on:
   push:
     branches:
-      - production
+      - main
   pull_request:
 
 permissions:
